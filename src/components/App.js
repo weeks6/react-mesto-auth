@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { BrowserRouter as Router, Route, Switch } from 'react-router-dom'
 import api from '../utils/api'
 import CurrentUserContext from '../contexts/CurrentUserContext'
 
@@ -10,10 +11,25 @@ import ImagePopup from './ImagePopup'
 import EditProfilePopup from './EditProfilePopup'
 import EditAvatarPopup from './EditAvatarPopup'
 import AddPlacePopup from './AddPlacePopup'
+import ProtectedRoute from './ProtectedRoute'
+import InfoTooltip from './InfoTooltip'
+
+import SignUp from '../pages/SignUp'
+import SignIn from '../pages/SignIn'
+import { signOut } from '../utils/auth'
 
 function App() {
   const [currentUser, setCurrentUser] = useState(null)
   const [cards, setCards] = useState([])
+
+  // const history = useHistory()
+
+  useEffect(() => {
+    api
+      .fetchCards()
+      .then((fetchedCards) => setCards(fetchedCards.data))
+      .catch((err) => console.log(err))
+  }, [currentUser])
 
   const [isEditProfilePopupOpen, setIsEditProfilePopupOpen] = useState(false)
   const [isAddPlacePopupOpen, setIsAddPlacePopupOpen] = useState(false)
@@ -21,41 +37,12 @@ function App() {
   const [isConfirmDeletePopupOpen, setIsConfirmDeletePopupOpen] = useState(
     false
   )
+
+  const [infoTooltip, setInfoTooltip] = useState({
+    open: false,
+    state: false,
+  })
   const [selectedCard, setSelectedCard] = useState(null)
-
-  useEffect(() => {
-    api
-      .getUserInfo()
-      .then((user) => {
-        setCurrentUser(user)
-      })
-      .catch((err) => console.log(err))
-
-    api
-      .fetchCards()
-      .then((fetchedCards) => setCards(fetchedCards))
-      .catch((err) => console.log(err))
-  }, [])
-
-  function handleCardLike(card) {
-    const isLiked = card.likes.some((i) => i._id === currentUser._id)
-
-    api
-      .changeCardLikeStatus(card._id, isLiked)
-      .then((newCard) =>
-        setCards((state) =>
-          state.map((c) => (c._id === card._id ? newCard : c))
-        )
-      )
-      .catch((err) => console.log(err))
-  }
-
-  function handleCardDelete(card) {
-    api
-      .deleteCard(card._id)
-      .then(() => setCards((state) => state.filter((c) => c._id !== card._id)))
-      .catch((err) => console.log(err))
-  }
 
   function handleEditAvatarClick() {
     setIsEditAvatarPopupOpen(true)
@@ -82,24 +69,17 @@ function App() {
     setIsEditProfilePopupOpen(false)
     setIsAddPlacePopupOpen(false)
     setIsConfirmDeletePopupOpen(false)
+    setInfoTooltip((state) => ({
+      ...state,
+      open: false,
+    }))
     setSelectedCard(null)
-  }
-
-  function handleAddPlaceSubmit({ title, link }) {
-    // TODO: fix naming to be uniform
-    api
-      .createCard({ name: title, link })
-      .then((card) => {
-        setCards([card, ...cards])
-        closeAllPopups()
-      })
-      .catch((err) => console.log(err))
   }
 
   function handleUpdateUser({ name, about }) {
     api
       .updateUserInfo(name, about)
-      .then((user) => setCurrentUser(user))
+      .then((user) => setCurrentUser(user.data))
       .catch((err) => console.log(err))
       .finally(() => closeAllPopups())
   }
@@ -107,59 +87,116 @@ function App() {
   function handleAvatarUpdate({ avatar }) {
     api
       .updateUserAvatar(avatar)
-      .then((user) => setCurrentUser(user))
+      .then((user) => setCurrentUser(user.data))
       .catch((err) => console.log(err))
       .finally(() => closeAllPopups())
   }
 
+  function handleCardLike(card) {
+    const isLiked = card.likes.some((i) => i === currentUser._id)
+
+    api
+      .changeCardLikeStatus(card._id, isLiked)
+      .then((newCard) =>
+        setCards((state) =>
+          state.map((c) => (c._id === card._id ? newCard.data : c))
+        )
+      )
+      .catch((err) => console.log(err))
+  }
+
+  function handleCardDelete(card) {
+    api
+      .deleteCard(card._id)
+      .then(() => setCards((state) => state.filter((c) => c._id !== card._id)))
+      .catch((err) => console.log(err))
+  }
+
+  function handleAddPlaceSubmit({ title, link }) {
+    // TODO: fix naming to be uniform
+    api
+      .createCard({ name: title, link })
+      .then((card) => {
+        setCards([...cards, card.data])
+        closeAllPopups()
+      })
+      .catch((err) => console.log(err))
+  }
+
+  function handleSignOut() {
+    signOut()
+    setCurrentUser(null)
+    // history.push('/sign-in')
+  }
+
   return (
-    <CurrentUserContext.Provider value={currentUser}>
-      <div className="page">
-        <Header />
-        <Main
-          onEditProfile={handleEditProfileClick}
-          onAddPlace={handleAddPlaceClick}
-          onEditAvatar={handleEditAvatarClick}
-          onCardClick={handleCardClick}
-          onDeleteClick={handleDeleteClick}
-          onCardLike={handleCardLike}
-          onCardDelete={handleCardDelete}
-          cards={cards}
-        />
-        <Footer />
+    <Router basename={process.env.PUBLIC_URL}>
+      <CurrentUserContext.Provider value={currentUser}>
+        <div className="page">
+          <Header onSignOut={handleSignOut} />
+          <Switch>
+            <Route path="/sign-up">
+              <SignUp onRegister={setInfoTooltip} />
+            </Route>
+            <Route path="/sign-in">
+              <SignIn onLogin={setCurrentUser} />
+            </Route>
+            <ProtectedRoute exact path="/">
+              <Main
+                onEditProfile={handleEditProfileClick}
+                onAddPlace={handleAddPlaceClick}
+                onEditAvatar={handleEditAvatarClick}
+                onCardClick={handleCardClick}
+                onDeleteClick={handleDeleteClick}
+                onCardLike={handleCardLike}
+                onCardDelete={handleCardDelete}
+                onUserUpdate={setCurrentUser}
+                cards={cards}
+                // onCardLike={handleCardLike}
+                // cards={cards}
+              />
+            </ProtectedRoute>
+          </Switch>
 
-        <EditProfilePopup
-          isOpened={isEditProfilePopupOpen}
-          onClose={closeAllPopups}
-          onUpdateUser={handleUpdateUser}
-        />
+          <Footer />
 
-        <EditAvatarPopup
-          isOpened={isEditAvatarPopupOpen}
-          onClose={closeAllPopups}
-          onAvatarUpdate={handleAvatarUpdate}
-        />
+          <EditProfilePopup
+            isOpened={isEditProfilePopupOpen}
+            onClose={closeAllPopups}
+            onUpdateUser={handleUpdateUser}
+          />
 
-        <AddPlacePopup
-          isOpened={isAddPlacePopupOpen}
-          onClose={closeAllPopups}
-          onAddPlace={handleAddPlaceSubmit}
-        />
+          <EditAvatarPopup
+            isOpened={isEditAvatarPopupOpen}
+            onClose={closeAllPopups}
+            onAvatarUpdate={handleAvatarUpdate}
+          />
 
-        <PopupWithForm
-          isOpened={isConfirmDeletePopupOpen}
-          onClose={closeAllPopups}
-          title="Вы уверены?"
-          name="confirm-delete"
-          buttonText="Да"
-        />
+          <AddPlacePopup
+            isOpened={isAddPlacePopupOpen}
+            onClose={closeAllPopups}
+            onAddPlace={handleAddPlaceSubmit}
+          />
 
-        <ImagePopup 
-          selectedCard={selectedCard}
-          onClose={closeAllPopups} 
-        />
-      </div>
-    </CurrentUserContext.Provider>
+          <PopupWithForm
+            isOpened={isConfirmDeletePopupOpen}
+            onClose={closeAllPopups}
+            title="Вы уверены?"
+            name="confirm-delete"
+            buttonText="Да"
+          />
+
+          <InfoTooltip
+            isOpened={infoTooltip.open}
+            name="infoTooltip"
+            success={infoTooltip.state}
+            onClose={closeAllPopups}
+          />
+
+          <ImagePopup selectedCard={selectedCard} onClose={closeAllPopups} />
+        </div>
+      </CurrentUserContext.Provider>
+    </Router>
   )
 }
 

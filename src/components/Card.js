@@ -7,8 +7,8 @@ export default function Card({ card, onCardClick, onDeleteClick, onCardLike }) {
 
   const user = useContext(CurrentUserContext)
 
-  const isOwn = owner?._id === user?._id
-  const isLiked = likes?.some((i) => i._id === user?._id)
+  const isOwn = owner === user?._id
+  const isLiked = likes?.some((i) => i === user?._id)
 
   function handleLikeClick() {
     onCardLike(card)
@@ -36,10 +36,7 @@ export default function Card({ card, onCardClick, onDeleteClick, onCardLike }) {
         onKeyDown={(evt) => evt.key === 'Enter' && onCardClick(card)}
       />
       <div className="card__info">
-        <h2
-          className="card__title"
-          title={name}
-        >
+        <h2 className="card__title" title={name}>
           {name}
         </h2>
         <div className="card__like-wrapper">

@@ -1,9 +1,12 @@
-import { useContext } from 'react'
+import { useEffect, useContext } from 'react'
+
 import CurrentUserContext from '../contexts/CurrentUserContext'
+import api from '../utils/api'
 
 import Card from './Card'
 
 export default function Main({
+  onUserUpdate,
   onEditProfile,
   onAddPlace,
   onEditAvatar,
@@ -14,15 +17,15 @@ export default function Main({
 }) {
   const user = useContext(CurrentUserContext)
 
+  useEffect(() => {
+    api.getUserInfo().then((userRes) => onUserUpdate(userRes.data))
+  }, [])
+
   return (
     <main className="main container">
       <section className="profile">
         <div className="avatar">
-          <img
-            src={user?.avatar}
-            className="avatar__image"
-            alt={user?.name}
-          />
+          <img src={user?.avatar} className="avatar__image" alt={user?.name} />
           <button
             className="button avatar__edit"
             aria-label="Редактировать аватар"
