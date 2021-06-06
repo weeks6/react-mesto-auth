@@ -1,14 +1,23 @@
-import { baseUrl, authToken } from './constants'
+import { baseUrl, AUTH_ENDPOINT } from './constants'
 import checkResponse from './checkResponse'
+import { getAccessToken } from './auth'
 
 class Api {
   constructor(options) {
     this.baseUrl = options.baseUrl
     this.headers = options.headers
+
+    this.setAuthHeader()
+  }
+
+  // все фичи прекрасно работают без старого токена, он АБСОЛЮТНО НЕ НУЖЕН
+  // СПАСИБО ЗА ВВЕДЕНИЕ В ЗАБЛУЖДЕНИЕ
+  setAuthHeader() {
+    this.headers.Authorization = `Bearer ${getAccessToken()}`
   }
 
   updateUserInfo(name, about) {
-    return fetch(`${this.baseUrl}/users/me`, {
+    return fetch(`${AUTH_ENDPOINT}users/me`, {
       method: 'PATCH',
       headers: this.headers,
       body: JSON.stringify({
@@ -19,14 +28,14 @@ class Api {
   }
 
   fetchCards() {
-    return fetch(`${this.baseUrl}/cards`, {
+    return fetch(`${AUTH_ENDPOINT}cards`, {
       method: 'GET',
       headers: this.headers,
     }).then(checkResponse)
   }
 
   createCard({ name, link }) {
-    return fetch(`${this.baseUrl}/cards`, {
+    return fetch(`${AUTH_ENDPOINT}cards`, {
       method: 'POST',
       headers: this.headers,
       body: JSON.stringify({
@@ -37,21 +46,21 @@ class Api {
   }
 
   deleteCard(cardId) {
-    return fetch(`${this.baseUrl}/cards/${cardId}`, {
+    return fetch(`${AUTH_ENDPOINT}cards/${cardId}`, {
       method: 'DELETE',
       headers: this.headers,
     }).then(checkResponse)
   }
 
   changeCardLikeStatus(cardId, isLiked) {
-    return fetch(`${this.baseUrl}/cards/likes/${cardId}`, {
+    return fetch(`${AUTH_ENDPOINT}cards/${cardId}/likes`, {
       method: isLiked ? 'DELETE' : 'PUT',
       headers: this.headers,
     }).then(checkResponse)
   }
 
   updateUserAvatar(avatar) {
-    return fetch(`${this.baseUrl}/users/me/avatar`, {
+    return fetch(`${AUTH_ENDPOINT}users/me/avatar`, {
       method: 'PATCH',
       headers: this.headers,
       body: JSON.stringify({
@@ -65,7 +74,6 @@ const api = new Api({
   baseUrl,
   headers: {
     'Content-Type': 'application/json',
-    authorization: authToken,
   },
 })
 

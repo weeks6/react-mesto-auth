@@ -32,7 +32,7 @@ function App() {
   useEffect(() => {
     api
       .fetchCards()
-      .then((fetchedCards) => setCards(fetchedCards))
+      .then((fetchedCards) => setCards(fetchedCards.data))
       .catch((err) => console.log(err))
 
     getUserInfo().then((userRes) => setCurrentUser(userRes.data))
@@ -97,20 +97,20 @@ function App() {
     api
       .updateUserAvatar(avatar)
       .then((user) => {
-        setCurrentUser(user.data)
+        setCurrentUser(user)
         closeAllPopups()
       })
       .catch((err) => console.log(err))
   }
 
   function handleCardLike(card) {
-    const isLiked = card.likes.some((i) => i._id === currentUser._id)
+    const isLiked = card.likes.some((i) => i === currentUser._id)
 
     api
       .changeCardLikeStatus(card._id, isLiked)
       .then((newCard) =>
         setCards((state) =>
-          state.map((c) => (c._id === card._id ? newCard : c))
+          state.map((c) => (c._id === card._id ? newCard.data : c))
         )
       )
       .catch((err) => console.log(err))
@@ -128,7 +128,7 @@ function App() {
     api
       .createCard({ name: title, link })
       .then((card) => {
-        setCards([...cards, card.data])
+        setCards([card.data, ...cards])
         closeAllPopups()
       })
       .catch((err) => console.log(err))
@@ -140,6 +140,7 @@ function App() {
         if (res.token) {
           setAccessToken(res.token)
           getUserInfo().then((userRes) => setCurrentUser(userRes.data))
+          api.setAuthHeader()
         }
       })
       .catch((err) => console.log(err))
