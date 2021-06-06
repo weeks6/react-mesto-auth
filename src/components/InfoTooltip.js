@@ -1,27 +1,17 @@
 import React from 'react'
 import Popup from './Popup'
 
-import SuccessImage from "../images/success.svg"
-import FailureImage from "../images/failure.svg"
+import successImage from '../images/success.svg'
+import failureImage from '../images/failure.svg'
 
-function InfoTooltip({
-  success,
-  name,
-  isOpened,
-  onClose
-}) {
+function InfoTooltip({ success, name, isOpened, onClose }) {
   return (
-    <Popup
-      isOpened={isOpened}
-      name={name}
-      onClose={onClose}
-    >
+    <Popup isOpened={isOpened} name={name} onClose={onClose}>
       <div className="infotooltip">
-
         {success ? (
           <>
             <img
-              src={SuccessImage}
+              src={successImage}
               alt="Успех"
               className="infotooltip__image"
             />
@@ -30,13 +20,13 @@ function InfoTooltip({
         ) : (
           <>
             <img
-              src={FailureImage}
+              src={failureImage}
               alt="Ошибка"
               className="infotooltip__image"
             />
-            <p className="infotooltip__text">Что-то пошло не так!
-              Попробуйте ещё раз.</p>
-
+            <p className="infotooltip__text">
+              Что-то пошло не так! Попробуйте ещё раз.
+            </p>
           </>
         )}
       </div>

@@ -2,14 +2,13 @@ import React, { useRef } from 'react'
 import PopupWithForm from './PopupWithForm'
 
 function EditAvatarPopup({ isOpened, onClose, onAvatarUpdate }) {
-
   const avatarRef = useRef(null)
 
   function handleSubmit(evt) {
     evt.preventDefault()
 
     onAvatarUpdate({
-      avatar: avatarRef.current.value
+      avatar: avatarRef.current.value,
     })
   }
 
@@ -31,7 +30,9 @@ function EditAvatarPopup({ isOpened, onClose, onAvatarUpdate }) {
           ref={avatarRef}
           required
         />
-        <span className="form__input-error" />
+        {/* <span className="form__input-error">
+          {avatarRef.current.validationMessage}
+        </span> */}
       </div>
     </PopupWithForm>
   )

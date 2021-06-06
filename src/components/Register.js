@@ -1,19 +1,17 @@
 import { useState } from 'react'
-import { NavLink } from "react-router-dom";
-import { signUp } from "../utils/auth";
+import { NavLink } from 'react-router-dom'
 
 function Register({ onRegister }) {
-
   const [form, setForm] = useState({
     email: {
       value: '',
       validity: null,
-      validtityMessage: ''
+      validtityMessage: '',
     },
     password: {
       value: '',
       validity: null,
-      validtityMessage: ''
+      validtityMessage: '',
     },
   })
 
@@ -23,32 +21,15 @@ function Register({ onRegister }) {
       [evt.target.name]: {
         value: evt.target.value,
         validity: evt.target.validity,
-        validtityMessage: evt.target.validationMessage
-      }
+        validtityMessage: evt.target.validationMessage,
+      },
     })
-
-
   }
 
-  const handleLogin = (evt) => {
+  const handleRegister = (evt) => {
     evt.preventDefault()
 
-    signUp(form.email.value, form.password.value)
-      .then(res => {
-        if (res.status !== 201) {
-          onRegister({
-            open: true,
-            state: false
-          })
-        } else {
-          onRegister({
-            open: true,
-            state: true
-          })
-        }
-        return res.json()
-      })
-      .catch(err => console.log(err))
+    onRegister(form.email.value, form.password.value)
   }
 
   return (
@@ -56,11 +37,10 @@ function Register({ onRegister }) {
       <h1 className="page__title login__title">Регистрация</h1>
       <form
         className="login__form"
-        name='login-form'
-        onSubmit={handleLogin}
+        name="login-form"
+        onSubmit={handleRegister}
         noValidate
       >
-
         <div className="form__input-field form__input-field_variant_dark">
           <input
             type="email"
@@ -73,7 +53,9 @@ function Register({ onRegister }) {
             value={form.email.value}
             onChange={handleChange}
           />
-          <span className="form__input-error">{form.email.validtityMessage}</span>
+          <span className="form__input-error">
+            {form.email.validtityMessage}
+          </span>
         </div>
 
         <div className="form__input-field form__input-field_variant_dark">
@@ -87,7 +69,9 @@ function Register({ onRegister }) {
             onChange={handleChange}
             minLength={8}
           />
-          <span className="form__input-error">{form.password.validtityMessage}</span>
+          <span className="form__input-error">
+            {form.password.validtityMessage}
+          </span>
         </div>
         <button
           className="button button_type_save button_variant_light"
@@ -98,12 +82,11 @@ function Register({ onRegister }) {
       </form>
       <div className="login__message">
         <span className="link">Уже зарегистрированы? </span>
-        <NavLink
-          className="link"
-          to="/sign-in"
-        >Войти</NavLink>
+        <NavLink className="link" to="/sign-in">
+          Войти
+        </NavLink>
       </div>
-    </main >
+    </main>
   )
 }
 

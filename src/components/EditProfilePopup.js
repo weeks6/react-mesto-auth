@@ -6,28 +6,51 @@ import CurrentUserContext from '../contexts/CurrentUserContext'
 function EditProfilePopup({ isOpened, onClose, onUpdateUser }) {
   const user = useContext(CurrentUserContext)
 
-  const [name, setName] = useState()
-  const [about, setAbout] = useState()
+  const [form, setForm] = useState({
+    name: {
+      value: '',
+      validity: null,
+      validtityMessage: '',
+    },
+    about: {
+      value: '',
+      validity: null,
+      validtityMessage: '',
+    },
+  })
 
   useEffect(() => {
-    setName(user?.name)
-    setAbout(user?.about)
-  }, [user])
+    setForm({
+      name: {
+        value: user?.name,
+        validity: true,
+        validtityMessage: '',
+      },
+      about: {
+        value: user?.about,
+        validity: true,
+        validtityMessage: '',
+      },
+    })
+  }, [user, isOpened])
 
-  function handleChangeName(evt) {
-    setName(evt.target.value)
-  }
-
-  function handleChangeAbout(evt) {
-    setAbout(evt.target.value)
+  const handleChange = (evt) => {
+    setForm({
+      ...form,
+      [evt.target.name]: {
+        value: evt.target.value,
+        validity: evt.target.validity,
+        validtityMessage: evt.target.validationMessage,
+      },
+    })
   }
 
   function handleSubmit(evt) {
     evt.preventDefault()
 
     onUpdateUser({
-      name,
-      about,
+      name: form.name.value,
+      about: form.about.value,
     })
   }
 
@@ -48,10 +71,11 @@ function EditProfilePopup({ isOpened, onClose, onUpdateUser }) {
           minLength="2"
           maxLength="40"
           required
-          value={name}
-          onChange={handleChangeName}
+          name="name"
+          value={form.name.value || ''}
+          onChange={handleChange}
         />
-        <span className="form__input-error" />
+        <span className="form__input-error">{form.name.validtityMessage}</span>
       </div>
 
       <div className="form__input-field">
@@ -62,10 +86,11 @@ function EditProfilePopup({ isOpened, onClose, onUpdateUser }) {
           minLength="2"
           maxLength="200"
           required
-          value={about}
-          onChange={handleChangeAbout}
+          name="about"
+          value={form.about.value || ''}
+          onChange={handleChange}
         />
-        <span className="form__input-error" />
+        <span className="form__input-error">{form.about.validtityMessage}</span>
       </div>
     </PopupWithForm>
   )

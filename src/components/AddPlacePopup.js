@@ -1,33 +1,38 @@
-import { useState, useRef } from 'react'
+import { useState } from 'react'
 
-import PopupWithForm from "./PopupWithForm"
-
+import PopupWithForm from './PopupWithForm'
 
 export default function AddPlacePopup({ isOpened, onClose, onAddPlace }) {
+  const [form, setForm] = useState({
+    title: {
+      value: '',
+      validity: null,
+      validtityMessage: '',
+    },
+    link: {
+      value: '',
+      validity: null,
+      validtityMessage: '',
+    },
+  })
 
-  const [title, setTitle] = useState()
-  const [titleErrorMessage, setTitleErrorMessage] = useState('')
-  const titleRef = useRef('')
-  const [link, setLink] = useState()
-  const [linkErrorMessage, setLinkErrorMessage] = useState('')
-  const linkRef = useRef('')
-
-  function handleChangeTitle(evt) {
-    setTitle(evt.target.value)
-    setTitleErrorMessage(titleRef.current.validationMessage)
-  }
-
-  function handleChangeLink(evt) {
-    setLink(evt.target.value)
-    setLinkErrorMessage(linkRef.current.validationMessage)
+  const handleChange = (evt) => {
+    setForm({
+      ...form,
+      [evt.target.name]: {
+        value: evt.target.value,
+        validity: evt.target.validity,
+        validtityMessage: evt.target.validationMessage,
+      },
+    })
   }
 
   function handleSubmit(evt) {
     evt.preventDefault()
 
     onAddPlace({
-      title,
-      link
+      title: form.title.value,
+      link: form.link.value,
     })
   }
 
@@ -43,29 +48,29 @@ export default function AddPlacePopup({ isOpened, onClose, onAddPlace }) {
       <div className="form__input-field">
         <input
           type="text"
+          name="title"
           className="form__text-field"
           placeholder="Название"
           minLength="2"
           maxLength="30"
           required
-          ref={titleRef}
-          value={title}
-          onChange={handleChangeTitle}
+          value={form.title.value}
+          onChange={handleChange}
         />
-        <span className="form__input-error">{titleErrorMessage}</span>
+        <span className="form__input-error">{form.title.validtityMessage}</span>
       </div>
 
       <div className="form__input-field">
         <input
           type="url"
+          name="link"
           className="form__text-field"
           placeholder="Ссылка на картинку"
           required
-          ref={linkRef}
-          value={link}
-          onChange={handleChangeLink}
+          value={form.link.value}
+          onChange={handleChange}
         />
-        <span className="form__input-error">{linkErrorMessage}</span>
+        <span className="form__input-error">{form.link.validtityMessage}</span>
       </div>
     </PopupWithForm>
   )

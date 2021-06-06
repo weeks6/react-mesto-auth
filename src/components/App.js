@@ -14,22 +14,29 @@ import AddPlacePopup from './AddPlacePopup'
 import ProtectedRoute from './ProtectedRoute'
 import InfoTooltip from './InfoTooltip'
 
-import SignUp from '../pages/SignUp'
-import SignIn from '../pages/SignIn'
-import { signOut } from '../utils/auth'
+import Register from './Register'
+import Login from './Login'
+
+import {
+  getUserInfo,
+  setAccessToken,
+  signIn,
+  signOut,
+  signUp,
+} from '../utils/auth'
 
 function App() {
   const [currentUser, setCurrentUser] = useState(null)
   const [cards, setCards] = useState([])
 
-  // const history = useHistory()
-
   useEffect(() => {
     api
       .fetchCards()
-      .then((fetchedCards) => setCards(fetchedCards.data))
+      .then((fetchedCards) => setCards(fetchedCards))
       .catch((err) => console.log(err))
-  }, [currentUser])
+
+    getUserInfo().then((userRes) => setCurrentUser(userRes.data))
+  }, [])
 
   const [isEditProfilePopupOpen, setIsEditProfilePopupOpen] = useState(false)
   const [isAddPlacePopupOpen, setIsAddPlacePopupOpen] = useState(false)
@@ -79,27 +86,31 @@ function App() {
   function handleUpdateUser({ name, about }) {
     api
       .updateUserInfo(name, about)
-      .then((user) => setCurrentUser(user.data))
+      .then((user) => {
+        setCurrentUser(user.data)
+        closeAllPopups()
+      })
       .catch((err) => console.log(err))
-      .finally(() => closeAllPopups())
   }
 
   function handleAvatarUpdate({ avatar }) {
     api
       .updateUserAvatar(avatar)
-      .then((user) => setCurrentUser(user.data))
+      .then((user) => {
+        setCurrentUser(user.data)
+        closeAllPopups()
+      })
       .catch((err) => console.log(err))
-      .finally(() => closeAllPopups())
   }
 
   function handleCardLike(card) {
-    const isLiked = card.likes.some((i) => i === currentUser._id)
+    const isLiked = card.likes.some((i) => i._id === currentUser._id)
 
     api
       .changeCardLikeStatus(card._id, isLiked)
       .then((newCard) =>
         setCards((state) =>
-          state.map((c) => (c._id === card._id ? newCard.data : c))
+          state.map((c) => (c._id === card._id ? newCard : c))
         )
       )
       .catch((err) => console.log(err))
@@ -123,10 +134,39 @@ function App() {
       .catch((err) => console.log(err))
   }
 
+  function handleSignIn({ email, password }) {
+    return signIn(email, password)
+      .then((res) => {
+        if (res.token) {
+          setAccessToken(res.token)
+          getUserInfo().then((userRes) => setCurrentUser(userRes.data))
+        }
+      })
+      .catch((err) => console.log(err))
+  }
+
   function handleSignOut() {
     signOut()
     setCurrentUser(null)
-    // history.push('/sign-in')
+  }
+
+  function handleSignUp(email, password) {
+    signUp(email, password)
+      .then((res) => {
+        setInfoTooltip({
+          open: true,
+          state: true,
+        })
+        return res
+      })
+      .catch((err) => {
+        setInfoTooltip({
+          open: true,
+          state: false,
+        })
+
+        console.log(err)
+      })
   }
 
   return (
@@ -136,10 +176,10 @@ function App() {
           <Header onSignOut={handleSignOut} />
           <Switch>
             <Route path="/sign-up">
-              <SignUp onRegister={setInfoTooltip} />
+              <Register onRegister={handleSignUp} />
             </Route>
             <Route path="/sign-in">
-              <SignIn onLogin={setCurrentUser} />
+              <Login onLogin={handleSignIn} />
             </Route>
             <ProtectedRoute exact path="/">
               <Main
@@ -150,10 +190,7 @@ function App() {
                 onDeleteClick={handleDeleteClick}
                 onCardLike={handleCardLike}
                 onCardDelete={handleCardDelete}
-                onUserUpdate={setCurrentUser}
                 cards={cards}
-                // onCardLike={handleCardLike}
-                // cards={cards}
               />
             </ProtectedRoute>
           </Switch>
