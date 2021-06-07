@@ -10,8 +10,6 @@ class Api {
     this.setAuthHeader()
   }
 
-  // все фичи прекрасно работают без старого токена, он АБСОЛЮТНО НЕ НУЖЕН
-  // СПАСИБО ЗА ВВЕДЕНИЕ В ЗАБЛУЖДЕНИЕ
   setAuthHeader() {
     this.headers.Authorization = `Bearer ${getAccessToken()}`
   }

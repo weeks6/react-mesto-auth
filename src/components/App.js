@@ -18,6 +18,7 @@ import Register from './Register'
 import Login from './Login'
 
 import {
+  getAccessToken,
   getUserInfo,
   setAccessToken,
   signIn,
@@ -30,12 +31,16 @@ function App() {
   const [cards, setCards] = useState([])
 
   useEffect(() => {
-    api
-      .fetchCards()
-      .then((fetchedCards) => setCards(fetchedCards.data))
-      .catch((err) => console.log(err))
+    if (getAccessToken()) {
+      api
+        .fetchCards()
+        .then((fetchedCards) => setCards(fetchedCards.data))
+        .catch((err) => console.log(err))
 
-    getUserInfo().then((userRes) => setCurrentUser(userRes.data))
+      getUserInfo()
+        .then((userRes) => setCurrentUser(userRes.data))
+        .catch((err) => console.log(err))
+    }
   }, [])
 
   const [isEditProfilePopupOpen, setIsEditProfilePopupOpen] = useState(false)
@@ -97,7 +102,7 @@ function App() {
     api
       .updateUserAvatar(avatar)
       .then((user) => {
-        setCurrentUser(user)
+        setCurrentUser(user.data)
         closeAllPopups()
       })
       .catch((err) => console.log(err))
@@ -139,8 +144,14 @@ function App() {
       .then((res) => {
         if (res.token) {
           setAccessToken(res.token)
-          getUserInfo().then((userRes) => setCurrentUser(userRes.data))
           api.setAuthHeader()
+          getUserInfo()
+            .then((userRes) => setCurrentUser(userRes.data))
+            .catch((err) => console.log(err))
+          api
+            .fetchCards()
+            .then((fetchedCards) => setCards(fetchedCards.data))
+            .catch((err) => console.log(err))
         }
       })
       .catch((err) => console.log(err))
